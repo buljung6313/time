@@ -240,6 +240,7 @@
     }
 
     async function sendAI() {
+      // 요청하신 API 키 적용 완료
       const apiKey = "AQ.Ab8RN6JF1p8tfzwGikCpfs-RH5NDFafGf-VXwJ58hjLY9SKfFw";
       const input = document.getElementById('chat-msg');
       const msg = input.value.trim();
@@ -254,8 +255,8 @@
         const box = document.getElementById('chat-box');
         const loadingMsg = box.lastChild;
 
-        // 에러 방지를 위해 통신 모델을 가장 범용적인 gemini-pro로 수정했습니다.
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+        // 최신 기본 모델인 gemini-1.5-flash로 연결
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         
         const response = await fetch(url, {
           method: 'POST',
