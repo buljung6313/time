@@ -87,14 +87,14 @@
     </section>
 
     <section id="ai" class="tab-content">
-      <div class="ai-header">✨ 시계 안내 AI</div>
+      <div class="ai-header">✨ 글로벌 시계 AI</div>
       
       <div id="chat-box">
-        <div class="message msg-ai">안녕하세요! 저는 시간을 알려주는 AI입니다. "지금 몇 시야?" 또는 "뉴욕 몇 시야?" 하고 질문해 보세요! ⏰</div>
+        <div class="message msg-ai">죄송합니다! 🙇‍♂️ 이제 전 세계 거의 모든 국가와 도시의 시간을 알아들을 수 있게 무적 업그레이드되었습니다. "캐나다 시간", "독일 시간", "두바이 몇 시야?" 편하게 물어보세요! ⏰</div>
       </div>
       
       <div class="chat-input-wrapper">
-        <input type="text" id="chat-msg" placeholder="질문을 입력하세요..." onkeypress="if(event.key==='Enter') sendAI()">
+        <input type="text" id="chat-msg" placeholder="나라나 도시 이름을 물어보세요..." onkeypress="if(event.key==='Enter') sendAI()">
         <button onclick="sendAI()">전송</button>
       </div>
     </section>
@@ -239,7 +239,6 @@
       setTimeout(() => { box.scrollTop = box.scrollHeight; }, 50);
     }
 
-    // API 키 없이 실행되는 내부 AI 로직
     function sendAI() {
       const input = document.getElementById('chat-msg');
       const msg = input.value.trim();
@@ -249,47 +248,86 @@
       addMsg(msg, 'msg-user');
       input.value = ''; 
       
-      // 답변 생성 처리
       setTimeout(() => {
         const reply = getClockAIResponse(msg);
         addMsg(reply, 'msg-ai');
-      }, 300);
+      }, 250);
     }
 
-    // 키워드를 인식하여 실시간 시간을 계산하는 함수
+    // 전 세계 주요 국가 및 도시 데이터베이스
+    const geoTimeZones = [
+      // 미주
+      { keywords: ['캐나다', '토론토', '오타와'], name: '캐나다 (토론토 기준)', tz: 'America/Toronto', flag: '🇨🇦' },
+      { keywords: ['밴쿠버'], name: '캐나다 (밴쿠버)', tz: 'America/Vancouver', flag: '🇨🇦' },
+      { keywords: ['미국', '뉴욕'], name: '미국 (뉴욕)', tz: 'America/New_York', flag: '🇺🇸' },
+      { keywords: ['la', '로스앤젤레스', '엘에이'], name: '미국 (로스앤젤레스)', tz: 'America/Los_Angeles', flag: '🇺🇸' },
+      { keywords: ['시카고'], name: '미국 (시카고)', tz: 'America/Chicago', flag: '🇺🇸' },
+      { keywords: ['하와이', '호놀룰루'], name: '미국 (하와이)', tz: 'Pacific/Honolulu', flag: '🇺🇸' },
+      { keywords: ['멕시코', '멕시코시티'], name: '멕시코', tz: 'America/Mexico_City', flag: '🇲🇽' },
+      { keywords: ['브라질', '상파울루', '리우'], name: '브라질 (상파울루)', tz: 'America/Sao_Paulo', flag: '🇧🇷' },
+      { keywords: ['아르헨티나', '부에노스아이레스'], name: '아르헨티나', tz: 'America/Argentina/Buenos_Aires', flag: '🇦🇷' },
+
+      // 유럽
+      { keywords: ['영국', '런던'], name: '영국 (런던)', tz: 'Europe/London', flag: '🇬🇧' },
+      { keywords: ['프랑스', '파리'], name: '프랑스 (파리)', tz: 'Europe/Paris', flag: '🇫🇷' },
+      { keywords: ['독일', '베를린', '프랑크푸르트'], name: '독일 (베를린)', tz: 'Europe/Berlin', flag: '🇩🇪' },
+      { keywords: ['이탈리아', '로마'], name: '이탈리아 (로마)', tz: 'Europe/Rome', flag: '🇮🇹' },
+      { keywords: ['스페인', '마드리드', '바르셀로나'], name: '스페인 (마드리드)', tz: 'Europe/Madrid', flag: '🇪🇸' },
+      { keywords: ['스위스', '취리히', '베른'], name: '스위스 (취리히)', tz: 'Europe/Zurich', flag: '🇨🇭' },
+      { keywords: ['네덜란드', '암스테르담'], name: '네덜란드', tz: 'Europe/Amsterdam', flag: '🇳🇱' },
+      { keywords: ['러시아', '모스크바'], name: '러시아 (모스크바)', tz: 'Europe/Moscow', flag: '🇷🇺' },
+
+      // 아시아
+      { keywords: ['한국', '대한민국', '서울'], name: '대한민국 (서울)', tz: 'Asia/Seoul', flag: '🇰🇷' },
+      { keywords: ['일본', '도쿄'], name: '일본 (도쿄)', tz: 'Asia/Tokyo', flag: '🇯🇵' },
+      { keywords: ['중국', '베이징', '북경'], name: '중국 (베이징)', tz: 'Asia/Shanghai', flag: '🇨🇳' },
+      { keywords: ['대만', '타이베이', '타이페이'], name: '대만 (타이베이)', tz: 'Asia/Taipei', flag: '🇹🇼' },
+      { keywords: ['홍콩'], name: '홍콩', tz: 'Asia/Hong_Kong', flag: '🇭🇰' },
+      { keywords: ['베트남', '하노이', '호치민'], name: '베트남 (하노이)', tz: 'Asia/Ho_Chi_Minh', flag: '🇻🇳' },
+      { keywords: ['태국', '방콕'], name: '태국 (방콕)', tz: 'Asia/Bangkok', flag: '🇹🇭' },
+      { keywords: ['싱가포르', '싱가폴'], name: '싱가포르', tz: 'Asia/Singapore', flag: '🇸🇬' },
+      { keywords: ['필리핀', '마닐라'], name: '필리핀', tz: 'Asia/Manila', flag: '🇵🇭' },
+      { keywords: ['인도', '뉴델리'], name: '인도 (뉴델리)', tz: 'Asia/Kolkata', flag: '🇮🇳' },
+      { keywords: ['튀르키예', '터키', '이스탄불'], name: '튀르키예 (이스탄불)', tz: 'Europe/Istanbul', flag: '🇹🇷' },
+
+      // 오세아니아 / 중동 / 아프리카
+      { keywords: ['호주', '오스트레일리아', '시드니'], name: '호주 (시드니)', tz: 'Australia/Sydney', flag: '🇦🇺' },
+      { keywords: ['멜버른', '멜번'], name: '호주 (멜버른)', tz: 'Australia/Melbourne', flag: '🇦🇺' },
+      { keywords: ['뉴질랜드', '오클랜드'], name: '뉴질랜드 (오클랜드)', tz: 'Pacific/Auckland', flag: '🇳🇿' },
+      { keywords: ['두바이', '아랍에미리트', '아부다비'], name: '아랍에미리트 (두바이)', tz: 'Asia/Dubai', flag: '🇦🇪' },
+      { keywords: ['이집트', '카이로'], name: '이집트 (카이로)', tz: 'Africa/Cairo', flag: '🇪🇬' },
+      { keywords: ['남아공', '남아프리카'], name: '남아프리카공화국', tz: 'Africa/Johannesburg', flag: '🇿🇦' }
+    ];
+
     function getClockAIResponse(userMsg) {
       const q = userMsg.toLowerCase().replace(/\s+/g, '');
       const now = new Date();
 
-      if (q.includes('뉴욕')) {
-        const t = now.toLocaleTimeString('ko-KR', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        return `🗽 현재 뉴욕 시간은 **${t}** 입니다.`;
-      }
-      if (q.includes('런던')) {
-        const t = now.toLocaleTimeString('ko-KR', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        return `🏰 현재 런던 시간은 **${t}** 입니다.`;
-      }
-      if (q.includes('도쿄')) {
-        const t = now.toLocaleTimeString('ko-KR', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        return `🗼 현재 도쿄 시간은 **${t}** 입니다.`;
-      }
-      if (q.includes('파리')) {
-        const t = now.toLocaleTimeString('ko-KR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        return `🇫🇷 현재 파리 시간은 **${t}** 입니다.`;
-      }
-      if (q.includes('la') || q.includes('로스앤젤레스')) {
-        const t = now.toLocaleTimeString('ko-KR', { timeZone: 'America/Los_Angeles', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        return `🌴 현재 로스앤젤레스(LA) 시간은 **${t}** 입니다.`;
-      }
-      if (q.includes('몇시') || q.includes('지금') || q.includes('시간')) {
-        const t = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        return `⏰ 현재 한국 시간은 **${t}** 입니다.`;
-      }
-      if (q.includes('안녕')) {
-        return "안녕하세요! 맘 편히 질문해 주세요. '지금 몇 시야?' 또는 '뉴욕/런던/도쿄/파리 시간'을 물어보시면 즉시 알려드립니다!";
+      // 1. 특정 국가/도시 키워드가 포함되어 있는지 최우선 검색
+      for (const target of geoTimeZones) {
+        if (target.keywords.some(kw => q.includes(kw))) {
+          const formattedTime = now.toLocaleTimeString('ko-KR', { 
+            timeZone: target.tz, 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+          });
+          return `${target.flag} 현재 **${target.name}** 시간은 **${formattedTime}** 입니다.`;
+        }
       }
 
-      return "저는 시간 전문 AI입니다! '지금 몇 시야?', '뉴욕 몇 시야?', '런던 시간 알려줘'처럼 물어봐 주세요. ⏰";
+      // 2. 국가명이 지정되지 않은 일반 시간 질문일 경우 (한국 시간)
+      if (q.includes('몇시') || q.includes('지금') || q.includes('시간')) {
+        const timeNow = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return `⏰ 현재 **대한민국 (서울)** 시간은 **${timeNow}** 입니다.`;
+      }
+
+      // 3. 인삿말
+      if (q.includes('안녕')) {
+        return "안녕하세요! 전 세계 어느 나라든 '캐나다 몇 시야?', '독일 시간', '두바이 시간'처럼 물어봐 주시면 바로 알려드립니다! 🌍";
+      }
+
+      return "궁금하신 국가나 도시 이름을 넣어 물어봐 주세요! (예: 캐나다, 프랑스, 호주, 뉴욕, 두바이 등) ⏰";
     }
   </script>
 </body>
