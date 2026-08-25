@@ -87,14 +87,14 @@
     </section>
 
     <section id="ai" class="tab-content">
-      <div class="ai-header">✨ Gemini AI</div>
+      <div class="ai-header">✨ 시계 안내 AI</div>
       
       <div id="chat-box">
-        <div class="message msg-ai">안녕하세요! 무엇을 도와드릴까요?</div>
+        <div class="message msg-ai">안녕하세요! 저는 시간을 알려주는 AI입니다. "지금 몇 시야?" 또는 "뉴욕 몇 시야?" 하고 질문해 보세요! ⏰</div>
       </div>
       
       <div class="chat-input-wrapper">
-        <input type="text" id="chat-msg" placeholder="메시지를 입력하세요..." onkeypress="if(event.key==='Enter') sendAI()">
+        <input type="text" id="chat-msg" placeholder="질문을 입력하세요..." onkeypress="if(event.key==='Enter') sendAI()">
         <button onclick="sendAI()">전송</button>
       </div>
     </section>
@@ -239,9 +239,8 @@
       setTimeout(() => { box.scrollTop = box.scrollHeight; }, 50);
     }
 
-    async function sendAI() {
-      // 이미지 속 API 키 반영
-      const apiKey = "AQ.Ab8RN6I3r-On2LLNogeN9ug3McMTGiD2zxNLw6xm5tcbNJk2Pg";
+    // API 키 없이 실행되는 내부 AI 로직
+    function sendAI() {
       const input = document.getElementById('chat-msg');
       const msg = input.value.trim();
       
@@ -250,32 +249,47 @@
       addMsg(msg, 'msg-user');
       input.value = ''; 
       
-      try {
-        addMsg("입력 중...", 'msg-ai');
-        const box = document.getElementById('chat-box');
-        const loadingMsg = box.lastChild;
-
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: msg }] }]
-          })
-        });
-        
-        const data = await response.json();
-        loadingMsg.remove();
-        
-        if(data.error) throw new Error(data.error.message);
-        
-        const reply = data.candidates[0].content.parts[0].text;
+      // 답변 생성 처리
+      setTimeout(() => {
+        const reply = getClockAIResponse(msg);
         addMsg(reply, 'msg-ai');
-        
-      } catch (e) {
-        addMsg("오류: " + e.message, 'msg-ai');
+      }, 300);
+    }
+
+    // 키워드를 인식하여 실시간 시간을 계산하는 함수
+    function getClockAIResponse(userMsg) {
+      const q = userMsg.toLowerCase().replace(/\s+/g, '');
+      const now = new Date();
+
+      if (q.includes('뉴욕')) {
+        const t = now.toLocaleTimeString('ko-KR', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return `🗽 현재 뉴욕 시간은 **${t}** 입니다.`;
       }
+      if (q.includes('런던')) {
+        const t = now.toLocaleTimeString('ko-KR', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return `🏰 현재 런던 시간은 **${t}** 입니다.`;
+      }
+      if (q.includes('도쿄')) {
+        const t = now.toLocaleTimeString('ko-KR', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return `🗼 현재 도쿄 시간은 **${t}** 입니다.`;
+      }
+      if (q.includes('파리')) {
+        const t = now.toLocaleTimeString('ko-KR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return `🇫🇷 현재 파리 시간은 **${t}** 입니다.`;
+      }
+      if (q.includes('la') || q.includes('로스앤젤레스')) {
+        const t = now.toLocaleTimeString('ko-KR', { timeZone: 'America/Los_Angeles', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return `🌴 현재 로스앤젤레스(LA) 시간은 **${t}** 입니다.`;
+      }
+      if (q.includes('몇시') || q.includes('지금') || q.includes('시간')) {
+        const t = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return `⏰ 현재 한국 시간은 **${t}** 입니다.`;
+      }
+      if (q.includes('안녕')) {
+        return "안녕하세요! 맘 편히 질문해 주세요. '지금 몇 시야?' 또는 '뉴욕/런던/도쿄/파리 시간'을 물어보시면 즉시 알려드립니다!";
+      }
+
+      return "저는 시간 전문 AI입니다! '지금 몇 시야?', '뉴욕 몇 시야?', '런던 시간 알려줘'처럼 물어봐 주세요. ⏰";
     }
   </script>
 </body>
